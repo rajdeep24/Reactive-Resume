@@ -12,6 +12,7 @@ export const resumeSchema = z.object({
   data: resumeDataSchema.default(defaultResumeData),
   visibility: z.enum(["private", "public"]).default("private"),
   locked: z.boolean().default(false),
+  previewUrl: z.string().nullable().optional(),
   userId: idSchema,
   user: userSchema.optional(),
   createdAt: dateSchema,

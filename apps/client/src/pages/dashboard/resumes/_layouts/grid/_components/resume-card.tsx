@@ -15,7 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@reactive-resume/ui";
-import { cn } from "@reactive-resume/utils";
 import dayjs from "dayjs";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
@@ -35,6 +34,41 @@ export const ResumeCard = ({ resume }: Props) => {
 
   const template = resume.data.metadata.template;
   const lastUpdated = dayjs().to(resume.updatedAt);
+
+  const renderPreview = () => {
+    if (resume.previewUrl) {
+      return (
+        <img
+          src={resume.previewUrl}
+          alt={resume.data.basics.name || t`Resume Preview`}
+          className="absolute inset-0 w-full h-full object-contain bg-muted rounded-md"
+        />
+      );
+    }
+
+    if (resume.data.basics.picture.url) {
+      return (
+        <img
+          src={resume.data.basics.picture.url}
+          alt={resume.data.basics.name || t`Resume Preview`}
+          className="absolute inset-0 w-full h-full object-cover bg-muted rounded-md"
+        />
+      );
+    }
+
+    return (
+      <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-muted rounded-md">
+        <span className="text-lg font-semibold text-primary">
+          {resume.data.basics.name || t`No Name`}
+        </span>
+        {resume.data.basics.headline && (
+          <span className="text-xs text-muted-foreground mt-1 text-center px-2 line-clamp-2">
+            {resume.data.basics.headline}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const onOpen = () => {
     void navigate(`/builder/${resume.id}`);
@@ -66,21 +100,17 @@ export const ResumeCard = ({ resume }: Props) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center bg-background/75 backdrop-blur-sm"
+                className="absolute inset-0 flex items-center justify-center bg-background/75 backdrop-blur-sm rounded-md z-20"
               >
                 <Lock size={42} />
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div
-            className={cn(
-              "absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end space-y-0.5 p-4 pt-12",
-              "bg-gradient-to-t from-background/80 to-transparent",
-            )}
-          >
-            <h4 className="line-clamp-2 font-medium">{resume.title}</h4>
-            <p className="line-clamp-1 text-xs opacity-75">{t`Last updated ${lastUpdated}`}</p>
+          {/* Overlay with title and subtitle */}
+          <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end space-y-0.5 p-4 pt-12 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-b-md">
+            <h4 className="line-clamp-2 font-medium text-white">{resume.title}</h4>
+            <p className="line-clamp-1 text-xs text-white/75">{t`Last updated ${lastUpdated}`}</p>
           </div>
 
           <img

@@ -23,6 +23,7 @@ import { BrandIcon } from "../components/brand-icon";
 import { Picture } from "../components/picture";
 import { useArtboardStore } from "../store/artboard";
 import type { TemplateProps } from "../types/template";
+import { getIconUrl } from "../utils/icon";
 
 const Header = () => {
   const basics = useArtboardStore((state) => state.resume.basics);
@@ -255,7 +256,19 @@ const Profiles = () => {
       {(item) => (
         <div>
           {isUrl(item.url.href) ? (
-            <Link url={item.url} label={item.username} icon={<BrandIcon slug={item.icon} />} />
+            <Link
+              url={item.url}
+              label={item.username}
+              icon={
+                <img
+                  className="ph"
+                  width={fontSize}
+                  height={fontSize}
+                  alt={item.network}
+                  src={`https://cdn.simpleicons.org/${item.icon}`}
+                />
+              }
+            />
           ) : (
             <p>{item.username}</p>
           )}

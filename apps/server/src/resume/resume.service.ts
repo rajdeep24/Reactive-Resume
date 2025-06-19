@@ -35,7 +35,7 @@ export class ResumeService {
       basics: { name, email, picture: { url: picture ?? "" } },
     } satisfies DeepPartial<ResumeData>);
 
-    return this.prisma.resume.create({
+    const resume = await this.prisma.resume.create({
       data: {
         data,
         userId,
@@ -44,12 +44,19 @@ export class ResumeService {
         slug: createResumeDto.slug ?? slugify(createResumeDto.title),
       },
     });
+
+    // Generate preview image in the background (don't wait for it)
+    this.generateAndSavePreview(resume as ResumeDto).catch((error: unknown) => {
+      Logger.error(`Failed to generate preview for new resume ${resume.id}:`, error);
+    });
+
+    return resume;
   }
 
-  import(userId: string, importResumeDto: ImportResumeDto) {
+  async import(userId: string, importResumeDto: ImportResumeDto) {
     const randomTitle = generateRandomName();
 
-    return this.prisma.resume.create({
+    const resume = await this.prisma.resume.create({
       data: {
         userId,
         visibility: "private",
@@ -58,6 +65,13 @@ export class ResumeService {
         slug: importResumeDto.slug ?? slugify(randomTitle),
       },
     });
+
+    // Generate preview image in the background (don't wait for it)
+    this.generateAndSavePreview(resume as ResumeDto).catch((error: unknown) => {
+      Logger.error(`Failed to generate preview for imported resume ${resume.id}:`, error);
+    });
+
+    return resume;
   }
 
   findAll(userId: string) {
@@ -110,7 +124,7 @@ export class ResumeService {
 
       if (locked) throw new BadRequestException(ErrorMessage.ResumeLocked);
 
-      return await this.prisma.resume.update({
+      const updatedResume = await this.prisma.resume.update({
         data: {
           title: updateResumeDto.title,
           slug: updateResumeDto.slug,
@@ -119,6 +133,15 @@ export class ResumeService {
         },
         where: { userId_id: { userId, id } },
       });
+
+      // If resume data was updated, regenerate the preview in the background
+      if (updateResumeDto.data) {
+        this.generateAndSavePreview(updatedResume as ResumeDto).catch((error: unknown) => {
+          Logger.error(`Failed to regenerate preview for updated resume ${id}:`, error);
+        });
+      }
+
+      return updatedResume;
     } catch (error) {
       if (error.code === "P2025") {
         Logger.error(error);
@@ -161,5 +184,56 @@ export class ResumeService {
 
   printPreview(resume: ResumeDto) {
     return this.printerService.printPreview(resume);
+  }
+
+  /**
+   * Generate a preview image for the resume and save the URL to the database
+   */
+  private async generateAndSavePreview(resume: ResumeDto): Promise<string | null> {
+    try {
+      const previewUrl = await this.printerService.generatePreview(resume);
+
+      // Update the resume with the preview URL
+      await this.prisma.resume.update({
+        where: { id: resume.id },
+        data: { previewUrl } as Prisma.ResumeUpdateInput,
+      });
+
+      return previewUrl;
+    } catch (error) {
+      Logger.error(`Failed to generate preview for resume ${resume.id}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate preview for a resume (public method for manual regeneration)
+   */
+  async regeneratePreview(userId: string, id: string): Promise<string | null> {
+    const resume = (await this.findOne(id, userId)) as ResumeDto;
+    return this.generateAndSavePreview(resume);
+  }
+
+  /**
+   * Batch regenerate previews for all resumes without preview URLs
+   */
+  async batchRegeneratePreview(userId: string): Promise<{ count: number }> {
+    // Find all resumes for the user
+    const allResumes = await this.prisma.resume.findMany({
+      where: { userId },
+    });
+
+    // For now, regenerate previews for all resumes
+    // TODO: Filter by previewUrl once Prisma client is regenerated
+    let count = 0;
+    for (const resume of allResumes) {
+      this.generateAndSavePreview(resume as ResumeDto).catch((error: unknown) => {
+        Logger.error(`Failed to generate preview for resume ${resume.id}:`, error);
+      });
+      count++;
+    }
+
+    Logger.log(`Started preview generation for ${count} resumes for user ${userId}`);
+    return { count };
   }
 }

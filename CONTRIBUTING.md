@@ -14,7 +14,7 @@ To run the development environment of the application locally on your computer, 
 ### 1. Fork and Clone the Repository
 
 ```sh
-git clone https://github.com/{your-github-username}/Reactive-Resume.git
+git clone https://github.com/{your-username}/Reactive-Resume.git
 cd Reactive-Resume
 ```
 
@@ -42,7 +42,7 @@ It should take just under half a minute for all the services to be booted up cor
 
 ### 5. Run the development server
 
-```sh
+```
 pnpm prisma:migrate:dev
 pnpm dev
 ```
@@ -83,3 +83,9 @@ git commit -m "fix(homepage): fix typo on homepage in the faq section"
 It helps to be as descriptive as possible in commit messages so that users can be aware of the changes made by you.
 
 Finally, create a pull request to merge the changes on your forked repository to the original repository hosted on AmruthPillai/Reactive-Resume. I can take a look at the changes you've made when I have the time and have it merged onto the app.
+
+## 6. Launching Prisma UI
+
+```
+npx prisma studio
+```

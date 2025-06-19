@@ -148,4 +148,33 @@ export class ResumeController {
       throw new InternalServerErrorException(error);
     }
   }
+
+  @Post(":id/regenerate-preview")
+  @UseGuards(TwoFactorGuard)
+  async regeneratePreview(@User() user: UserEntity, @Param("id") id: string) {
+    try {
+      const previewUrl = await this.resumeService.regeneratePreview(user.id, id);
+
+      return { previewUrl };
+    } catch (error) {
+      Logger.error(error);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @Post("batch-regenerate-previews")
+  @UseGuards(TwoFactorGuard)
+  async batchRegeneratePreview(@User() user: UserEntity) {
+    try {
+      const result = await this.resumeService.batchRegeneratePreview(user.id);
+
+      return {
+        message: `Started preview generation for ${result.count} resumes`,
+        count: result.count,
+      };
+    } catch (error) {
+      Logger.error(error);
+      throw new InternalServerErrorException(error);
+    }
+  }
 }

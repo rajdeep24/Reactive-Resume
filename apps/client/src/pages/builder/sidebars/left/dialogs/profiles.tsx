@@ -100,7 +100,8 @@ export const ProfilesDialog = () => {
                     className="font-medium"
                   >
                     Simple Icons
-                  </a>
+                  </a>{" "}
+                  and alternative sources for LinkedIn & Microsoft icons
                 </Trans>
               </FormDescription>
             </FormItem>

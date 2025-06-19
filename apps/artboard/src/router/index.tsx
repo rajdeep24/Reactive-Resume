@@ -14,4 +14,4 @@ export const routes = createRoutesFromChildren(
   </Route>,
 );
 
-export const router = createBrowserRouter(routes);
+export const router: ReturnType<typeof createBrowserRouter> = createBrowserRouter(routes);

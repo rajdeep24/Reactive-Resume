@@ -57,6 +57,7 @@ model Resume {
   data       Json        @default("{}")
   visibility Visibility  @default(private)
   locked     Boolean     @default(false)
+  previewUrl String?     // URL for the generated resume preview image
   statistics Statistics?
   userId     String
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
